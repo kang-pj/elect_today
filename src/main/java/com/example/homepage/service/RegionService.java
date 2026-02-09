@@ -1,6 +1,6 @@
 package com.example.homepage.service;
 
-import com.example.homepage.repository.EvSubsidyRepository;
+import com.example.homepage.mapper.EvSubsidyMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RegionService {
 
-    private final EvSubsidyRepository subsidyRepository;
+    private final EvSubsidyMapper subsidyMapper;
 
     /**
      * 시도별 지역 목록 조회
@@ -22,7 +22,7 @@ public class RegionService {
     @Transactional(readOnly = true)
     public Map<String, List<String>> getRegionsBySido() {
         // 모든 데이터에서 시도와 지역 추출
-        var allData = subsidyRepository.findAll();
+        var allData = subsidyMapper.findByCrawlDate(java.time.LocalDate.now());
         
         Map<String, Set<String>> regionSetMap = new LinkedHashMap<>();
         
@@ -48,7 +48,7 @@ public class RegionService {
      */
     @Transactional(readOnly = true)
     public List<String> getAllSidos() {
-        return subsidyRepository.findAll().stream()
+        return subsidyMapper.findByCrawlDate(java.time.LocalDate.now()).stream()
                 .map(data -> data.getSido())
                 .distinct()
                 .sorted()
@@ -60,7 +60,7 @@ public class RegionService {
      */
     @Transactional(readOnly = true)
     public List<String> getRegionsBySido(String sido) {
-        return subsidyRepository.findAll().stream()
+        return subsidyMapper.findByCrawlDate(java.time.LocalDate.now()).stream()
                 .filter(data -> data.getSido().equals(sido))
                 .map(data -> data.getRegion())
                 .distinct()

@@ -4,8 +4,8 @@ import com.example.homepage.crawler.EvSubsidyCrawler;
 import com.example.homepage.dto.EvSubsidyData;
 import com.example.homepage.entity.EvSubsidy;
 import com.example.homepage.entity.EvSubsidyDaily;
-import com.example.homepage.repository.EvSubsidyDailyRepository;
-import com.example.homepage.repository.EvSubsidyRepository;
+import com.example.homepage.mapper.EvSubsidyDailyMapper;
+import com.example.homepage.mapper.EvSubsidyMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,8 +23,8 @@ import java.util.Optional;
 public class EvSubsidyService {
 
     private final EvSubsidyCrawler crawler;
-    private final EvSubsidyRepository subsidyRepository;
-    private final EvSubsidyDailyRepository dailyRepository;
+    private final EvSubsidyMapper subsidyMapper;
+    private final EvSubsidyDailyMapper dailyMapper;
 
     @Transactional
     public int crawlAndSaveData() {
@@ -61,12 +61,12 @@ public class EvSubsidyService {
     private EvSubsidy saveSubsidyData(LocalDate date, EvSubsidyData data) {
         try {
             // 중복 체크
-            Optional<EvSubsidy> existing = subsidyRepository
+            EvSubsidy existing = subsidyMapper
                     .findByCrawlDateAndSidoAndRegionAndCarType(date, data.getSido(), data.getRegion(), data.getCarType());
             
-            if (existing.isPresent()) {
+            if (existing != null) {
                 log.debug("이미 존재하는 데이터: {} - {} ({})", date, data.getSido(), data.getRegion());
-                return existing.get();
+                return existing;
             }
             
             EvSubsidy subsidy = EvSubsidy.builder()
@@ -74,6 +74,7 @@ public class EvSubsidyService {
                     .sido(data.getSido())
                     .region(data.getRegion())
                     .carType(data.getCarType())
+                    .dataType("today")
                     .totalAnnounced(data.getTotalAnnounced())
                     .priorityAnnounced(data.getPriorityAnnounced())
                     .corporationAnnounced(data.getCorporationAnnounced())
@@ -91,7 +92,8 @@ public class EvSubsidyService {
                     .generalDelivered(data.getGeneralDelivered())
                     .build();
             
-            return subsidyRepository.save(subsidy);
+            subsidyMapper.insert(subsidy);
+            return subsidy;
             
         } catch (Exception e) {
             log.error("데이터 저장 오류: {} - {}", data.getSido(), data.getRegion(), e);
@@ -103,15 +105,13 @@ public class EvSubsidyService {
         try {
             // 어제 데이터 조회
             LocalDate yesterday = today.minusDays(1);
-            Optional<EvSubsidy> yesterdayOpt = subsidyRepository
+            EvSubsidy yesterdayData = subsidyMapper
                     .findByCrawlDateAndSidoAndRegion(yesterday, todayData.getSido(), todayData.getRegion());
             
-            if (yesterdayOpt.isEmpty()) {
+            if (yesterdayData == null) {
                 log.debug("어제 데이터 없음: {} - {}", todayData.getSido(), todayData.getRegion());
                 return false;
             }
-            
-            EvSubsidy yesterdayData = yesterdayOpt.get();
             
             // 일일 변화량 계산
             int dailyReceived = todayData.getTotalReceived() - yesterdayData.getTotalReceived();
@@ -121,10 +121,10 @@ public class EvSubsidyService {
             int dailyRemainingChange = todayRemaining - yesterdayRemaining;
             
             // 중복 체크
-            Optional<EvSubsidyDaily> existingDaily = dailyRepository
+            EvSubsidyDaily existingDaily = dailyMapper
                     .findByTargetDateAndSidoAndRegion(today, todayData.getSido(), todayData.getRegion());
             
-            if (existingDaily.isPresent()) {
+            if (existingDaily != null) {
                 log.debug("이미 존재하는 일일 데이터: {} - {} ({})", today, todayData.getSido(), todayData.getRegion());
                 return false;
             }
@@ -138,7 +138,7 @@ public class EvSubsidyService {
                     .dailyRemainingChange(dailyRemainingChange)
                     .build();
             
-            dailyRepository.save(daily);
+            dailyMapper.insert(daily);
             log.info("일일 변화량 저장: {} - {} | 접수: {}, 출고: {}, 잔여: {}", 
                     today, todayData.getRegion(), dailyReceived, dailyDelivered, dailyRemainingChange);
             
@@ -152,12 +152,12 @@ public class EvSubsidyService {
 
     @Transactional(readOnly = true)
     public List<EvSubsidy> getTodayData() {
-        return subsidyRepository.findByCrawlDate(LocalDate.now());
+        return subsidyMapper.findByCrawlDate(LocalDate.now());
     }
 
     @Transactional(readOnly = true)
     public List<EvSubsidyDaily> getTodayDailyData() {
-        return dailyRepository.findByTargetDate(LocalDate.now());
+        return dailyMapper.findByTargetDate(LocalDate.now());
     }
 
     /**
@@ -180,35 +180,34 @@ public class EvSubsidyService {
         for (EvSubsidyData data : crawledData) {
             try {
                 // realtime 타입으로 저장 (있으면 update, 없으면 insert)
-                Optional<EvSubsidy> existingOpt = subsidyRepository.findByCrawlDateAndSidoAndRegionAndDataType(
+                EvSubsidy existing = subsidyMapper.findByCrawlDateAndSidoAndRegionAndDataType(
                         today, data.getSido(), data.getRegion(), "realtime");
                 
-                EvSubsidy entity;
-                if (existingOpt.isPresent()) {
+                if (existing != null) {
                     // 업데이트
-                    entity = existingOpt.get();
-                    entity.setTotalAnnounced(data.getTotalAnnounced());
-                    entity.setPriorityAnnounced(data.getPriorityAnnounced());
-                    entity.setCorporationAnnounced(data.getCorporationAnnounced());
-                    entity.setTaxiAnnounced(data.getTaxiAnnounced());
-                    entity.setGeneralAnnounced(data.getGeneralAnnounced());
+                    existing.setTotalAnnounced(data.getTotalAnnounced());
+                    existing.setPriorityAnnounced(data.getPriorityAnnounced());
+                    existing.setCorporationAnnounced(data.getCorporationAnnounced());
+                    existing.setTaxiAnnounced(data.getTaxiAnnounced());
+                    existing.setGeneralAnnounced(data.getGeneralAnnounced());
                     
-                    entity.setTotalReceived(data.getTotalReceived());
-                    entity.setPriorityReceived(data.getPriorityReceived());
-                    entity.setCorporationReceived(data.getCorporationReceived());
-                    entity.setTaxiReceived(data.getTaxiReceived());
-                    entity.setGeneralReceived(data.getGeneralReceived());
+                    existing.setTotalReceived(data.getTotalReceived());
+                    existing.setPriorityReceived(data.getPriorityReceived());
+                    existing.setCorporationReceived(data.getCorporationReceived());
+                    existing.setTaxiReceived(data.getTaxiReceived());
+                    existing.setGeneralReceived(data.getGeneralReceived());
                     
-                    entity.setTotalDelivered(data.getTotalDelivered());
-                    entity.setPriorityDelivered(data.getPriorityDelivered());
-                    entity.setCorporationDelivered(data.getCorporationDelivered());
-                    entity.setTaxiDelivered(data.getTaxiDelivered());
-                    entity.setGeneralDelivered(data.getGeneralDelivered());
+                    existing.setTotalDelivered(data.getTotalDelivered());
+                    existing.setPriorityDelivered(data.getPriorityDelivered());
+                    existing.setCorporationDelivered(data.getCorporationDelivered());
+                    existing.setTaxiDelivered(data.getTaxiDelivered());
+                    existing.setGeneralDelivered(data.getGeneralDelivered());
                     
+                    subsidyMapper.update(existing);
                     log.debug("실시간 데이터 업데이트: {} - {}", data.getSido(), data.getRegion());
                 } else {
                     // 신규 삽입
-                    entity = EvSubsidy.builder()
+                    EvSubsidy entity = EvSubsidy.builder()
                             .crawlDate(today)
                             .sido(data.getSido())
                             .region(data.getRegion())
@@ -231,10 +230,10 @@ public class EvSubsidyService {
                             .generalDelivered(data.getGeneralDelivered())
                             .build();
                     
+                    subsidyMapper.insert(entity);
                     log.debug("실시간 데이터 신규 삽입: {} - {}", data.getSido(), data.getRegion());
                 }
                 
-                subsidyRepository.save(entity);
                 savedCount++;
                 
             } catch (Exception e) {
@@ -252,7 +251,7 @@ public class EvSubsidyService {
     @Transactional(readOnly = true)
     public Map<String, Object> getRegionStats(String sido, String region) {
         // today 타입 데이터만 조회
-        List<EvSubsidy> dataList = subsidyRepository.findBySidoAndRegionAndDataTypeOrderByCrawlDateAsc(sido, region, "today");
+        List<EvSubsidy> dataList = subsidyMapper.findBySidoAndRegionAndDataTypeOrderByCrawlDateAsc(sido, region, "today");
         
         if (dataList.isEmpty()) {
             return Map.of("error", "데이터가 없습니다.");
@@ -403,11 +402,10 @@ public class EvSubsidyService {
         result.put("latest", latest);
         
         // realtime 데이터 조회
-        Optional<EvSubsidy> realtimeOpt = subsidyRepository.findByCrawlDateAndSidoAndRegionAndDataType(
+        EvSubsidy realtimeData = subsidyMapper.findByCrawlDateAndSidoAndRegionAndDataType(
                 LocalDate.now(), sido, region, "realtime");
         
-        if (realtimeOpt.isPresent()) {
-            EvSubsidy realtimeData = realtimeOpt.get();
+        if (realtimeData != null) {
             Map<String, Object> realtime = new HashMap<>();
             
             // 전체 데이터
@@ -475,17 +473,15 @@ public class EvSubsidyService {
         
         // 요청한 지역의 최신 데이터 조회
         LocalDate today = LocalDate.now();
-        Optional<EvSubsidy> realtimeOpt = subsidyRepository.findByCrawlDateAndSidoAndRegionAndDataType(
+        EvSubsidy realtimeData = subsidyMapper.findByCrawlDateAndSidoAndRegionAndDataType(
                 today, sido, region, "realtime");
         
-        if (realtimeOpt.isEmpty()) {
+        if (realtimeData == null) {
             return Map.of("error", "해당 지역의 실시간 데이터를 찾을 수 없습니다.");
         }
         
-        EvSubsidy realtimeData = realtimeOpt.get();
-        
         // 00시 기준 데이터와 비교
-        Optional<EvSubsidy> todayDataOpt = subsidyRepository.findByCrawlDateAndSidoAndRegionAndDataType(
+        EvSubsidy todayData = subsidyMapper.findByCrawlDateAndSidoAndRegionAndDataType(
                 today, sido, region, "today");
         
         Map<String, Object> result = new HashMap<>();
@@ -515,9 +511,7 @@ public class EvSubsidyService {
         result.put("generalDelivered", realtimeData.getGeneralDelivered());
         result.put("generalRemaining", realtimeData.getGeneralAnnounced() - realtimeData.getGeneralReceived());
         
-        if (todayDataOpt.isPresent()) {
-            EvSubsidy todayData = todayDataOpt.get();
-            
+        if (todayData != null) {
             // 전체 오늘 증가량
             result.put("todayReceived", realtimeData.getTotalReceived() - todayData.getTotalReceived());
             result.put("todayDelivered", realtimeData.getTotalDelivered() - todayData.getTotalDelivered());

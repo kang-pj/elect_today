@@ -2,7 +2,7 @@ package com.example.homepage.service;
 
 import com.example.homepage.dto.EvSubsidyData;
 import com.example.homepage.entity.EvSubsidy;
-import com.example.homepage.repository.EvSubsidyRepository;
+import com.example.homepage.mapper.EvSubsidyMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EvSubsidyDataLoader {
 
-    private final EvSubsidyRepository subsidyRepository;
+    private final EvSubsidyMapper subsidyMapper;
     private final ObjectMapper objectMapper;
     
     private static final String DATA_FOLDER = "data/ev_subsidy";
@@ -224,8 +224,10 @@ public class EvSubsidyDataLoader {
     private boolean saveData(LocalDate crawlDate, EvSubsidyData data) {
         try {
             // 중복 체크
-            if (subsidyRepository.findByCrawlDateAndSidoAndRegionAndCarType(
-                    crawlDate, data.getSido(), data.getRegion(), data.getCarType()).isPresent()) {
+            EvSubsidy existing = subsidyMapper.findByCrawlDateAndSidoAndRegionAndCarType(
+                    crawlDate, data.getSido(), data.getRegion(), data.getCarType());
+            
+            if (existing != null) {
                 log.debug("이미 존재하는 데이터: {} - {} - {} ({})", 
                         crawlDate, data.getSido(), data.getRegion(), data.getCarType());
                 return false;
@@ -236,6 +238,7 @@ public class EvSubsidyDataLoader {
                     .sido(data.getSido())
                     .region(data.getRegion())
                     .carType(data.getCarType())
+                    .dataType("today")
                     .totalAnnounced(data.getTotalAnnounced())
                     .priorityAnnounced(data.getPriorityAnnounced())
                     .corporationAnnounced(data.getCorporationAnnounced())
@@ -253,7 +256,7 @@ public class EvSubsidyDataLoader {
                     .generalDelivered(data.getGeneralDelivered())
                     .build();
             
-            subsidyRepository.save(subsidy);
+            subsidyMapper.insert(subsidy);
             return true;
             
         } catch (Exception e) {
