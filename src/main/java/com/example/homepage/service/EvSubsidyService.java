@@ -496,16 +496,24 @@ public class EvSubsidyService {
         // 전체 데이터
         result.put("totalReceived", realtimeData.getTotalReceived());
         result.put("totalDelivered", realtimeData.getTotalDelivered());
+        result.put("totalRemaining", realtimeData.getTotalAnnounced() - realtimeData.getTotalReceived());
         
         // 카테고리별 데이터
         result.put("priorityReceived", realtimeData.getPriorityReceived());
         result.put("priorityDelivered", realtimeData.getPriorityDelivered());
+        result.put("priorityRemaining", realtimeData.getPriorityAnnounced() - realtimeData.getPriorityReceived());
+        
         result.put("corporationReceived", realtimeData.getCorporationReceived());
         result.put("corporationDelivered", realtimeData.getCorporationDelivered());
+        result.put("corporationRemaining", realtimeData.getCorporationAnnounced() - realtimeData.getCorporationReceived());
+        
         result.put("taxiReceived", realtimeData.getTaxiReceived());
         result.put("taxiDelivered", realtimeData.getTaxiDelivered());
+        result.put("taxiRemaining", realtimeData.getTaxiAnnounced() - realtimeData.getTaxiReceived());
+        
         result.put("generalReceived", realtimeData.getGeneralReceived());
         result.put("generalDelivered", realtimeData.getGeneralDelivered());
+        result.put("generalRemaining", realtimeData.getGeneralAnnounced() - realtimeData.getGeneralReceived());
         
         if (todayDataOpt.isPresent()) {
             EvSubsidy todayData = todayDataOpt.get();
@@ -527,6 +535,18 @@ public class EvSubsidyService {
             log.info("전체 {} 개 지역 갱신 완료 | {} - {} 오늘 신청: {}대, 오늘 출고: {}대", 
                     savedCount, sido, region,
                     result.get("todayReceived"), result.get("todayDelivered"));
+        } else {
+            // today 데이터가 없으면 0으로 설정
+            result.put("todayReceived", 0);
+            result.put("todayDelivered", 0);
+            result.put("todayPriorityReceived", 0);
+            result.put("todayPriorityDelivered", 0);
+            result.put("todayCorporationReceived", 0);
+            result.put("todayCorporationDelivered", 0);
+            result.put("todayTaxiReceived", 0);
+            result.put("todayTaxiDelivered", 0);
+            result.put("todayGeneralReceived", 0);
+            result.put("todayGeneralDelivered", 0);
         }
         
         return result;
