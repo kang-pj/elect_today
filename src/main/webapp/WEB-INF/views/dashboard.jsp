@@ -463,32 +463,53 @@
             
             // 현재 카테고리에 따른 값 가져오기
             let announcedValue, receivedValue, deliveredValue, remainingValue;
+            let todayReceivedValue = 0, todayDeliveredValue = 0;
             
             if (currentCategory === 'total') {
                 announcedValue = latest.totalAnnounced;
                 receivedValue = realtimeData ? realtimeData.totalReceived : latest.totalReceived;
                 deliveredValue = realtimeData ? realtimeData.totalDelivered : latest.totalDelivered;
-                remainingValue = latest.remaining;
+                remainingValue = realtimeData ? realtimeData.totalRemaining : latest.remaining;
+                if (realtimeData) {
+                    todayReceivedValue = realtimeData.todayReceived;
+                    todayDeliveredValue = realtimeData.todayDelivered;
+                }
             } else if (currentCategory === 'priority') {
                 announcedValue = latest.priorityAnnounced;
-                receivedValue = latest.priorityReceived;
-                deliveredValue = latest.priorityDelivered;
-                remainingValue = latest.priorityAnnounced - latest.priorityReceived;
+                receivedValue = realtimeData ? realtimeData.priorityReceived : latest.priorityReceived;
+                deliveredValue = realtimeData ? realtimeData.priorityDelivered : latest.priorityDelivered;
+                remainingValue = realtimeData ? realtimeData.priorityRemaining : (latest.priorityAnnounced - latest.priorityReceived);
+                if (realtimeData) {
+                    todayReceivedValue = realtimeData.todayPriorityReceived;
+                    todayDeliveredValue = realtimeData.todayPriorityDelivered;
+                }
             } else if (currentCategory === 'corporation') {
                 announcedValue = latest.corporationAnnounced;
-                receivedValue = latest.corporationReceived;
-                deliveredValue = latest.corporationDelivered;
-                remainingValue = latest.corporationAnnounced - latest.corporationReceived;
+                receivedValue = realtimeData ? realtimeData.corporationReceived : latest.corporationReceived;
+                deliveredValue = realtimeData ? realtimeData.corporationDelivered : latest.corporationDelivered;
+                remainingValue = realtimeData ? realtimeData.corporationRemaining : (latest.corporationAnnounced - latest.corporationReceived);
+                if (realtimeData) {
+                    todayReceivedValue = realtimeData.todayCorporationReceived;
+                    todayDeliveredValue = realtimeData.todayCorporationDelivered;
+                }
             } else if (currentCategory === 'taxi') {
                 announcedValue = latest.taxiAnnounced;
-                receivedValue = latest.taxiReceived;
-                deliveredValue = latest.taxiDelivered;
-                remainingValue = latest.taxiAnnounced - latest.taxiReceived;
+                receivedValue = realtimeData ? realtimeData.taxiReceived : latest.taxiReceived;
+                deliveredValue = realtimeData ? realtimeData.taxiDelivered : latest.taxiDelivered;
+                remainingValue = realtimeData ? realtimeData.taxiRemaining : (latest.taxiAnnounced - latest.taxiReceived);
+                if (realtimeData) {
+                    todayReceivedValue = realtimeData.todayTaxiReceived;
+                    todayDeliveredValue = realtimeData.todayTaxiDelivered;
+                }
             } else if (currentCategory === 'general') {
                 announcedValue = latest.generalAnnounced;
-                receivedValue = latest.generalReceived;
-                deliveredValue = latest.generalDelivered;
-                remainingValue = latest.generalAnnounced - latest.generalReceived;
+                receivedValue = realtimeData ? realtimeData.generalReceived : latest.generalReceived;
+                deliveredValue = realtimeData ? realtimeData.generalDelivered : latest.generalDelivered;
+                remainingValue = realtimeData ? realtimeData.generalRemaining : (latest.generalAnnounced - latest.generalReceived);
+                if (realtimeData) {
+                    todayReceivedValue = realtimeData.todayGeneralReceived;
+                    todayDeliveredValue = realtimeData.todayGeneralDelivered;
+                }
             }
             
             const receivedRate = announcedValue > 0 ? ((receivedValue / announcedValue) * 100).toFixed(1) : '0.0';
@@ -503,14 +524,14 @@
                 realtimeTimeStr = h + ':' + m + ':' + s + ' 기준';
             }
             
-            // 오늘 증가량 표시 (전체만)
+            // 오늘 증가량 표시
             let todayReceivedBadge = '';
             let todayDeliveredBadge = '';
             let todayCompareCard = '';
             
-            if (currentCategory === 'total' && realtimeData && realtimeData.todayReceived !== undefined) {
-                todayReceivedBadge = '<div class="change up">📈 오늘 +' + realtimeData.todayReceived.toLocaleString() + '대 신청</div>';
-                todayDeliveredBadge = '<div class="change up">🚗 오늘 +' + realtimeData.todayDelivered.toLocaleString() + '대 출고</div>';
+            if (realtimeData && todayReceivedValue !== undefined) {
+                todayReceivedBadge = '<div class="change up">📈 오늘 +' + todayReceivedValue.toLocaleString() + '대 신청</div>';
+                todayDeliveredBadge = '<div class="change up">🚗 오늘 +' + todayDeliveredValue.toLocaleString() + '대 출고</div>';
                 
                 // 오늘 접수 카드
                 const todayReceivedCard = '<div class="stat-card realtime">' +
@@ -519,7 +540,7 @@
                     '<button class="btn-refresh" id="btnRefresh" onclick="refreshRealtime()">🔄 갱신</button>' +
                     '</div>' +
                     '<div style="font-size: 12px; color: #667eea; margin-bottom: 10px;">🕐 ' + realtimeTimeStr + '</div>' +
-                    '<div class="value" style="font-size: 42px; color: #f44336;">' + realtimeData.todayReceived.toLocaleString() + '<span class="unit">대</span></div>' +
+                    '<div class="value" style="font-size: 42px; color: #f44336;">' + todayReceivedValue.toLocaleString() + '<span class="unit">대</span></div>' +
                     '<div class="detail" style="margin-top: 10px;">📝 오늘 신청한 대수</div>' +
                     '</div>';
                 
@@ -527,16 +548,35 @@
                 const todayDeliveredCard = '<div class="stat-card realtime">' +
                     '<h3>오늘 출고</h3>' +
                     '<div style="font-size: 12px; color: #667eea; margin-bottom: 10px;">🕐 ' + realtimeTimeStr + '</div>' +
-                    '<div class="value" style="font-size: 42px; color: #4caf50;">' + realtimeData.todayDelivered.toLocaleString() + '<span class="unit">대</span></div>' +
+                    '<div class="value" style="font-size: 42px; color: #4caf50;">' + todayDeliveredValue.toLocaleString() + '<span class="unit">대</span></div>' +
                     '<div class="detail" style="margin-top: 10px;">🚗 오늘 출고된 대수</div>' +
                     '</div>';
                 
                 todayCompareCard = '<div class="stats-grid-today">' + todayReceivedCard + todayDeliveredCard + '</div>';
             }
             
-            const realtimeClass = (currentCategory === 'total' && realtimeData) ? 'realtime' : '';
-            const realtimeBadge = (currentCategory === 'total' && realtimeData) ? '<span class="badge">실시간</span>' : '';
-            const realtimeTime = (currentCategory === 'total' && realtimeData) ? '<div style="font-size: 11px; color: #4caf50; margin-bottom: 5px;">🕐 ' + realtimeTimeStr + '</div>' : '';
+            const realtimeClass = realtimeData ? 'realtime' : '';
+            const realtimeBadge = realtimeData ? '<span class="badge">실시간</span>' : '';
+            const realtimeTime = realtimeData ? '<div style="font-size: 11px; color: #4caf50; margin-bottom: 5px;">🕐 ' + realtimeTimeStr + '</div>' : '';
+            
+            // 00시 기준 값 (카테고리별)
+            let baseReceivedValue, baseDeliveredValue;
+            if (currentCategory === 'total') {
+                baseReceivedValue = latest.totalReceived;
+                baseDeliveredValue = latest.totalDelivered;
+            } else if (currentCategory === 'priority') {
+                baseReceivedValue = latest.priorityReceived;
+                baseDeliveredValue = latest.priorityDelivered;
+            } else if (currentCategory === 'corporation') {
+                baseReceivedValue = latest.corporationReceived;
+                baseDeliveredValue = latest.corporationDelivered;
+            } else if (currentCategory === 'taxi') {
+                baseReceivedValue = latest.taxiReceived;
+                baseDeliveredValue = latest.taxiDelivered;
+            } else if (currentCategory === 'general') {
+                baseReceivedValue = latest.generalReceived;
+                baseDeliveredValue = latest.generalDelivered;
+            }
             
             const html = '<div class="stats-grid">' +
                 '<div class="stat-card">' +
@@ -553,14 +593,14 @@
                 '<h3>접수 대수 ' + realtimeBadge + '</h3>' +
                 realtimeTime +
                 '<div class="value">' + receivedValue.toLocaleString() + '<span class="unit">대</span></div>' +
-                '<div class="detail">00시 기준: ' + latest.totalReceived.toLocaleString() + '대</div>' +
+                '<div class="detail">00시 기준: ' + baseReceivedValue.toLocaleString() + '대</div>' +
                 todayReceivedBadge +
                 '</div>' +
                 '<div class="stat-card ' + realtimeClass + '">' +
                 '<h3>출고 대수 ' + realtimeBadge + '</h3>' +
                 realtimeTime +
                 '<div class="value">' + deliveredValue.toLocaleString() + '<span class="unit">대</span></div>' +
-                '<div class="detail">00시 기준: ' + latest.totalDelivered.toLocaleString() + '대</div>' +
+                '<div class="detail">00시 기준: ' + baseDeliveredValue.toLocaleString() + '대</div>' +
                 todayDeliveredBadge +
                 '</div>' +
                 '<div class="stat-card">' +

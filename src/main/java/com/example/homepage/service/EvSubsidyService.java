@@ -323,17 +323,49 @@ public class EvSubsidyService {
         if (realtimeOpt.isPresent()) {
             EvSubsidy realtimeData = realtimeOpt.get();
             Map<String, Object> realtime = new HashMap<>();
+            
+            // 전체 데이터
             realtime.put("totalReceived", realtimeData.getTotalReceived());
             realtime.put("totalDelivered", realtimeData.getTotalDelivered());
-            realtime.put("remaining", realtimeData.getTotalAnnounced() - realtimeData.getTotalReceived());
+            realtime.put("totalRemaining", realtimeData.getTotalAnnounced() - realtimeData.getTotalReceived());
+            
+            // 카테고리별 데이터
+            realtime.put("priorityReceived", realtimeData.getPriorityReceived());
+            realtime.put("priorityDelivered", realtimeData.getPriorityDelivered());
+            realtime.put("priorityRemaining", realtimeData.getPriorityAnnounced() - realtimeData.getPriorityReceived());
+            
+            realtime.put("corporationReceived", realtimeData.getCorporationReceived());
+            realtime.put("corporationDelivered", realtimeData.getCorporationDelivered());
+            realtime.put("corporationRemaining", realtimeData.getCorporationAnnounced() - realtimeData.getCorporationReceived());
+            
+            realtime.put("taxiReceived", realtimeData.getTaxiReceived());
+            realtime.put("taxiDelivered", realtimeData.getTaxiDelivered());
+            realtime.put("taxiRemaining", realtimeData.getTaxiAnnounced() - realtimeData.getTaxiReceived());
+            
+            realtime.put("generalReceived", realtimeData.getGeneralReceived());
+            realtime.put("generalDelivered", realtimeData.getGeneralDelivered());
+            realtime.put("generalRemaining", realtimeData.getGeneralAnnounced() - realtimeData.getGeneralReceived());
+            
             realtime.put("updatedAt", realtimeData.getCreatedAt().toString());
             
-            // 오늘 증가량
+            // 오늘 증가량 (전체)
             int todayReceived = realtimeData.getTotalReceived() - latestData.getTotalReceived();
             int todayDelivered = realtimeData.getTotalDelivered() - latestData.getTotalDelivered();
-            
             realtime.put("todayReceived", todayReceived);
             realtime.put("todayDelivered", todayDelivered);
+            
+            // 오늘 증가량 (카테고리별)
+            realtime.put("todayPriorityReceived", realtimeData.getPriorityReceived() - latestData.getPriorityReceived());
+            realtime.put("todayPriorityDelivered", realtimeData.getPriorityDelivered() - latestData.getPriorityDelivered());
+            
+            realtime.put("todayCorporationReceived", realtimeData.getCorporationReceived() - latestData.getCorporationReceived());
+            realtime.put("todayCorporationDelivered", realtimeData.getCorporationDelivered() - latestData.getCorporationDelivered());
+            
+            realtime.put("todayTaxiReceived", realtimeData.getTaxiReceived() - latestData.getTaxiReceived());
+            realtime.put("todayTaxiDelivered", realtimeData.getTaxiDelivered() - latestData.getTaxiDelivered());
+            
+            realtime.put("todayGeneralReceived", realtimeData.getGeneralReceived() - latestData.getGeneralReceived());
+            realtime.put("todayGeneralDelivered", realtimeData.getGeneralDelivered() - latestData.getGeneralDelivered());
             
             result.put("realtime", realtime);
         }
