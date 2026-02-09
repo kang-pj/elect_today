@@ -115,6 +115,39 @@ public class EvSubsidyController {
     }
 
     /**
+     * JSON 파일에서 특정 날짜로 데이터 로딩
+     */
+    @PostMapping("/load-json-with-date")
+    public ResponseEntity<Map<String, Object>> loadFromJsonWithDate(
+            @RequestParam String filename,
+            @RequestParam String date) {
+        
+        log.info("JSON 로딩 요청: {} (날짜: {})", filename, date);
+        
+        try {
+            LocalDate targetDate = LocalDate.parse(date);
+            int count = dataLoader.loadFromJsonFileWithDate(filename, targetDate);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "데이터 로딩 완료");
+            response.put("savedCount", count);
+            response.put("date", date);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("JSON 로딩 오류", e);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "로딩 실패: " + e.getMessage());
+            
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
      * 사용 가능한 JSON 파일 목록 조회
      */
     @GetMapping("/json-files")

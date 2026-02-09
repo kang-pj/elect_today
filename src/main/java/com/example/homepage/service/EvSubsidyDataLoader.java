@@ -48,6 +48,42 @@ public class EvSubsidyDataLoader {
             String dateStr = root.get("date").asText();
             LocalDate crawlDate = LocalDate.parse(dateStr, DATE_FORMATTER);
             
+            return loadJsonData(root, crawlDate);
+            
+        } catch (Exception e) {
+            log.error("JSON 파일 로딩 오류: {}", filename, e);
+            return 0;
+        }
+    }
+
+    /**
+     * JSON 파일을 특정 날짜로 읽어서 DB에 저장
+     */
+    @Transactional
+    public int loadFromJsonFileWithDate(String filename, LocalDate targetDate) {
+        try {
+            File file = new File(filename);
+            if (!file.exists()) {
+                log.error("파일을 찾을 수 없습니다: {}", file.getAbsolutePath());
+                return 0;
+            }
+            
+            log.info("JSON 파일 로딩 시작: {} (날짜: {})", filename, targetDate);
+            
+            JsonNode root = objectMapper.readTree(file);
+            return loadJsonData(root, targetDate);
+            
+        } catch (Exception e) {
+            log.error("JSON 파일 로딩 오류: {}", filename, e);
+            return 0;
+        }
+    }
+
+    /**
+     * JSON 데이터를 파싱하여 DB에 저장
+     */
+    private int loadJsonData(JsonNode root, LocalDate crawlDate) {
+        try {
             JsonNode dataArray = root.get("data");
             int savedCount = 0;
             
