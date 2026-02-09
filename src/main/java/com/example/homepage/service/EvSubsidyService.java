@@ -460,96 +460,73 @@ public class EvSubsidyService {
     }
 
     /**
-     * 특정 지역 실시간 크롤링 및 업데이트
+     * 특정 지역 실시간 크롤링 및 업데이트 (전체 지역 갱신)
      */
     @Transactional
     public Map<String, Object> updateRealtimeData(String sido, String region) {
-        log.info("실시간 데이터 업데이트: {} - {}", sido, region);
+        log.info("실시간 데이터 업데이트 요청: {} - {} (전체 지역 갱신)", sido, region);
         
-        // 1. 실시간 크롤링 실행
-        List<EvSubsidyData> crawledData = crawler.crawlSubsidyData();
+        // 전체 지역 실시간 크롤링 및 저장
+        int savedCount = crawlAndSaveRealtimeData();
         
-        // 2. 해당 지역 데이터 찾기
-        EvSubsidyData realtimeData = crawledData.stream()
-                .filter(data -> data.getSido().equals(sido) && data.getRegion().equals(region))
-                .findFirst()
-                .orElse(null);
-        
-        if (realtimeData == null) {
-            return Map.of("error", "실시간 데이터를 찾을 수 없습니다.");
+        if (savedCount == 0) {
+            return Map.of("error", "실시간 데이터 갱신 실패");
         }
         
-        // 3. realtime 타입 데이터 업데이트 (있으면 update, 없으면 insert)
+        // 요청한 지역의 최신 데이터 조회
         LocalDate today = LocalDate.now();
-        Optional<EvSubsidy> existingOpt = subsidyRepository.findByCrawlDateAndSidoAndRegionAndDataType(
+        Optional<EvSubsidy> realtimeOpt = subsidyRepository.findByCrawlDateAndSidoAndRegionAndDataType(
                 today, sido, region, "realtime");
         
-        EvSubsidy entity;
-        if (existingOpt.isPresent()) {
-            // 업데이트
-            entity = existingOpt.get();
-            entity.setTotalReceived(realtimeData.getTotalReceived());
-            entity.setPriorityReceived(realtimeData.getPriorityReceived());
-            entity.setCorporationReceived(realtimeData.getCorporationReceived());
-            entity.setTaxiReceived(realtimeData.getTaxiReceived());
-            entity.setGeneralReceived(realtimeData.getGeneralReceived());
-            
-            entity.setTotalDelivered(realtimeData.getTotalDelivered());
-            entity.setPriorityDelivered(realtimeData.getPriorityDelivered());
-            entity.setCorporationDelivered(realtimeData.getCorporationDelivered());
-            entity.setTaxiDelivered(realtimeData.getTaxiDelivered());
-            entity.setGeneralDelivered(realtimeData.getGeneralDelivered());
-            
-            log.info("실시간 데이터 업데이트 완료");
-        } else {
-            // 신규 삽입
-            entity = EvSubsidy.builder()
-                    .crawlDate(today)
-                    .sido(sido)
-                    .region(region)
-                    .carType(realtimeData.getCarType())
-                    .dataType("realtime")
-                    .totalAnnounced(realtimeData.getTotalAnnounced())
-                    .priorityAnnounced(realtimeData.getPriorityAnnounced())
-                    .corporationAnnounced(realtimeData.getCorporationAnnounced())
-                    .taxiAnnounced(realtimeData.getTaxiAnnounced())
-                    .generalAnnounced(realtimeData.getGeneralAnnounced())
-                    .totalReceived(realtimeData.getTotalReceived())
-                    .priorityReceived(realtimeData.getPriorityReceived())
-                    .corporationReceived(realtimeData.getCorporationReceived())
-                    .taxiReceived(realtimeData.getTaxiReceived())
-                    .generalReceived(realtimeData.getGeneralReceived())
-                    .totalDelivered(realtimeData.getTotalDelivered())
-                    .priorityDelivered(realtimeData.getPriorityDelivered())
-                    .corporationDelivered(realtimeData.getCorporationDelivered())
-                    .taxiDelivered(realtimeData.getTaxiDelivered())
-                    .generalDelivered(realtimeData.getGeneralDelivered())
-                    .build();
-            
-            log.info("실시간 데이터 신규 삽입");
+        if (realtimeOpt.isEmpty()) {
+            return Map.of("error", "해당 지역의 실시간 데이터를 찾을 수 없습니다.");
         }
         
-        entity = subsidyRepository.save(entity);
+        EvSubsidy realtimeData = realtimeOpt.get();
         
-        // 4. 00시 기준 데이터와 비교
+        // 00시 기준 데이터와 비교
         Optional<EvSubsidy> todayDataOpt = subsidyRepository.findByCrawlDateAndSidoAndRegionAndDataType(
                 today, sido, region, "today");
         
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
-        result.put("updatedAt", entity.getCreatedAt().toString());
-        result.put("totalReceived", entity.getTotalReceived());
-        result.put("totalDelivered", entity.getTotalDelivered());
+        result.put("totalRegions", savedCount);
+        result.put("updatedAt", realtimeData.getCreatedAt().toString());
+        
+        // 전체 데이터
+        result.put("totalReceived", realtimeData.getTotalReceived());
+        result.put("totalDelivered", realtimeData.getTotalDelivered());
+        
+        // 카테고리별 데이터
+        result.put("priorityReceived", realtimeData.getPriorityReceived());
+        result.put("priorityDelivered", realtimeData.getPriorityDelivered());
+        result.put("corporationReceived", realtimeData.getCorporationReceived());
+        result.put("corporationDelivered", realtimeData.getCorporationDelivered());
+        result.put("taxiReceived", realtimeData.getTaxiReceived());
+        result.put("taxiDelivered", realtimeData.getTaxiDelivered());
+        result.put("generalReceived", realtimeData.getGeneralReceived());
+        result.put("generalDelivered", realtimeData.getGeneralDelivered());
         
         if (todayDataOpt.isPresent()) {
             EvSubsidy todayData = todayDataOpt.get();
-            int todayReceived = entity.getTotalReceived() - todayData.getTotalReceived();
-            int todayDelivered = entity.getTotalDelivered() - todayData.getTotalDelivered();
             
-            result.put("todayReceived", todayReceived);
-            result.put("todayDelivered", todayDelivered);
+            // 전체 오늘 증가량
+            result.put("todayReceived", realtimeData.getTotalReceived() - todayData.getTotalReceived());
+            result.put("todayDelivered", realtimeData.getTotalDelivered() - todayData.getTotalDelivered());
             
-            log.info("오늘 신청: {}대, 오늘 출고: {}대", todayReceived, todayDelivered);
+            // 카테고리별 오늘 증가량
+            result.put("todayPriorityReceived", realtimeData.getPriorityReceived() - todayData.getPriorityReceived());
+            result.put("todayPriorityDelivered", realtimeData.getPriorityDelivered() - todayData.getPriorityDelivered());
+            result.put("todayCorporationReceived", realtimeData.getCorporationReceived() - todayData.getCorporationReceived());
+            result.put("todayCorporationDelivered", realtimeData.getCorporationDelivered() - todayData.getCorporationDelivered());
+            result.put("todayTaxiReceived", realtimeData.getTaxiReceived() - todayData.getTaxiReceived());
+            result.put("todayTaxiDelivered", realtimeData.getTaxiDelivered() - todayData.getTaxiDelivered());
+            result.put("todayGeneralReceived", realtimeData.getGeneralReceived() - todayData.getGeneralReceived());
+            result.put("todayGeneralDelivered", realtimeData.getGeneralDelivered() - todayData.getGeneralDelivered());
+            
+            log.info("전체 {} 개 지역 갱신 완료 | {} - {} 오늘 신청: {}대, 오늘 출고: {}대", 
+                    savedCount, sido, region,
+                    result.get("todayReceived"), result.get("todayDelivered"));
         }
         
         return result;

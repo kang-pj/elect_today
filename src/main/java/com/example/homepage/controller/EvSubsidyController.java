@@ -222,4 +222,32 @@ public class EvSubsidyController {
             return ResponseEntity.status(500).body(Map.of("error", "업데이트 중 오류가 발생했습니다."));
         }
     }
+
+    /**
+     * 마지막 실시간 갱신 시간 조회
+     */
+    @GetMapping("/last-update-time")
+    public ResponseEntity<Map<String, Object>> getLastUpdateTime() {
+        try {
+            // realtime 타입 데이터 중 가장 최근 created_at 조회
+            List<EvSubsidy> realtimeData = subsidyService.getTodayData();
+            
+            if (realtimeData.isEmpty()) {
+                return ResponseEntity.ok(Map.of("lastUpdateTime", ""));
+            }
+            
+            // realtime 타입만 필터링하여 가장 최근 시간 찾기
+            String lastUpdateTime = realtimeData.stream()
+                    .filter(data -> "realtime".equals(data.getDataType()))
+                    .map(data -> data.getCreatedAt().toString())
+                    .max(String::compareTo)
+                    .orElse("");
+            
+            return ResponseEntity.ok(Map.of("lastUpdateTime", lastUpdateTime));
+            
+        } catch (Exception e) {
+            log.error("마지막 갱신 시간 조회 오류", e);
+            return ResponseEntity.ok(Map.of("lastUpdateTime", ""));
+        }
+    }
 }

@@ -283,6 +283,83 @@
             text-align: center;
         }
 
+        /* 모달 스타일 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            animation: slideDown 0.3s;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-body {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .modal-footer {
+            text-align: right;
+        }
+
+        .modal-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .modal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
         @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;
@@ -374,6 +451,25 @@
         </div>
     </div>
 
+    <!-- 대기 모달 -->
+    <div id="waitModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                ⏰ 잠시만 기다려주세요
+            </div>
+            <div class="modal-body">
+                <p>마지막 갱신 후 <strong id="remainingTime">3분</strong>이 지나지 않았습니다.</p>
+                <p>서버 부하를 줄이기 위해 3분 후에 다시 시도해주세요.</p>
+                <p style="margin-top: 15px; font-size: 13px; color: #999;">
+                    마지막 갱신: <span id="lastUpdateDisplay"></span>
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" onclick="closeModal()">확인</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let chartInstance = null;
         let statsData = null;
@@ -383,6 +479,32 @@
 
         const sido = '${sido}';
         const region = '${region}';
+
+        function closeModal() {
+            document.getElementById('waitModal').style.display = 'none';
+        }
+
+        function showWaitModal(remainingMinutes, lastUpdateTime) {
+            const modal = document.getElementById('waitModal');
+            const remainingTimeEl = document.getElementById('remainingTime');
+            const lastUpdateDisplayEl = document.getElementById('lastUpdateDisplay');
+            
+            const minutes = Math.floor(remainingMinutes);
+            const seconds = Math.floor((remainingMinutes - minutes) * 60);
+            
+            if (minutes > 0) {
+                remainingTimeEl.textContent = minutes + '분 ' + seconds + '초';
+            } else {
+                remainingTimeEl.textContent = seconds + '초';
+            }
+            
+            if (lastUpdateTime) {
+                const dt = new Date(lastUpdateTime);
+                lastUpdateDisplayEl.textContent = dt.toLocaleString('ko-KR');
+            }
+            
+            modal.style.display = 'block';
+        }
 
         window.addEventListener('load', function() {
             if (sido && region) {
@@ -419,8 +541,29 @@
 
         async function refreshRealtime() {
             const btn = document.getElementById('btnRefresh');
+            
+            // 마지막 갱신 시간 확인
+            try {
+                const checkResponse = await fetch('/api/ev-subsidy/last-update-time');
+                const checkData = await checkResponse.json();
+                
+                if (checkData.lastUpdateTime) {
+                    const lastUpdate = new Date(checkData.lastUpdateTime);
+                    const now = new Date();
+                    const diffMinutes = (now - lastUpdate) / 1000 / 60;
+                    
+                    if (diffMinutes < 3) {
+                        const remainingMinutes = 3 - diffMinutes;
+                        showWaitModal(remainingMinutes, checkData.lastUpdateTime);
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.error('마지막 갱신 시간 확인 오류:', e);
+            }
+            
             btn.disabled = true;
-            btn.textContent = '⏳ 갱신 중...';
+            btn.textContent = '⏳ 전체 지역 갱신 중...';
             
             try {
                 const url = '/api/ev-subsidy/update-realtime?sido=' + encodeURIComponent(sido) + '&region=' + encodeURIComponent(region);
@@ -433,22 +576,49 @@
                     throw new Error(data.error);
                 }
                 
-                // realtime 데이터 업데이트
+                // realtime 데이터 업데이트 (모든 카테고리 포함)
                 realtimeData = {
                     totalReceived: data.totalReceived,
                     totalDelivered: data.totalDelivered,
+                    totalRemaining: data.totalRemaining,
+                    
+                    priorityReceived: data.priorityReceived,
+                    priorityDelivered: data.priorityDelivered,
+                    priorityRemaining: data.priorityRemaining,
+                    
+                    corporationReceived: data.corporationReceived,
+                    corporationDelivered: data.corporationDelivered,
+                    corporationRemaining: data.corporationRemaining,
+                    
+                    taxiReceived: data.taxiReceived,
+                    taxiDelivered: data.taxiDelivered,
+                    taxiRemaining: data.taxiRemaining,
+                    
+                    generalReceived: data.generalReceived,
+                    generalDelivered: data.generalDelivered,
+                    generalRemaining: data.generalRemaining,
+                    
                     todayReceived: data.todayReceived,
                     todayDelivered: data.todayDelivered,
+                    todayPriorityReceived: data.todayPriorityReceived,
+                    todayPriorityDelivered: data.todayPriorityDelivered,
+                    todayCorporationReceived: data.todayCorporationReceived,
+                    todayCorporationDelivered: data.todayCorporationDelivered,
+                    todayTaxiReceived: data.todayTaxiReceived,
+                    todayTaxiDelivered: data.todayTaxiDelivered,
+                    todayGeneralReceived: data.todayGeneralReceived,
+                    todayGeneralDelivered: data.todayGeneralDelivered,
+                    
                     updatedAt: data.updatedAt
                 };
                 
                 renderStats();
                 
-                btn.textContent = '✅ 갱신 완료';
+                btn.textContent = '✅ ' + data.totalRegions + '개 지역 갱신 완료';
                 setTimeout(() => {
                     btn.textContent = '🔄 실시간 갱신';
                     btn.disabled = false;
-                }, 2000);
+                }, 3000);
                 
             } catch (error) {
                 console.error('Error refreshing data:', error);

@@ -47954,3 +47954,68 @@ Hibernate:
         and e1_0.data_type=?
 2026-02-09 11:10:42 - 실시간 데이터 업데이트: 공단 - 한국환경공단
 2026-02-09 11:10:42 - 실시간 크롤링 완료: 161 개 저장
+2026-02-09 11:14:43 - 대시보드 접속: 경기 - 고양시
+2026-02-09 11:14:43 - 지역 통계 조회: 경기 - 고양시
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.car_type,
+        e1_0.corporation_announced,
+        e1_0.corporation_delivered,
+        e1_0.corporation_received,
+        e1_0.crawl_date,
+        e1_0.created_at,
+        e1_0.data_type,
+        e1_0.general_announced,
+        e1_0.general_delivered,
+        e1_0.general_received,
+        e1_0.priority_announced,
+        e1_0.priority_delivered,
+        e1_0.priority_received,
+        e1_0.region,
+        e1_0.sido,
+        e1_0.taxi_announced,
+        e1_0.taxi_delivered,
+        e1_0.taxi_received,
+        e1_0.total_announced,
+        e1_0.total_delivered,
+        e1_0.total_received 
+    from
+        ev_subsidy e1_0 
+    where
+        e1_0.sido=? 
+        and e1_0.region=? 
+        and e1_0.data_type=? 
+    order by
+        e1_0.crawl_date asc
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.car_type,
+        e1_0.corporation_announced,
+        e1_0.corporation_delivered,
+        e1_0.corporation_received,
+        e1_0.crawl_date,
+        e1_0.created_at,
+        e1_0.data_type,
+        e1_0.general_announced,
+        e1_0.general_delivered,
+        e1_0.general_received,
+        e1_0.priority_announced,
+        e1_0.priority_delivered,
+        e1_0.priority_received,
+        e1_0.region,
+        e1_0.sido,
+        e1_0.taxi_announced,
+        e1_0.taxi_delivered,
+        e1_0.taxi_received,
+        e1_0.total_announced,
+        e1_0.total_delivered,
+        e1_0.total_received 
+    from
+        ev_subsidy e1_0 
+    where
+        e1_0.crawl_date=? 
+        and e1_0.sido=? 
+        and e1_0.region=? 
+        and e1_0.data_type=?
