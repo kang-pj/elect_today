@@ -462,9 +462,10 @@ public class EvSubsidyService {
             return Map.of("error", "해당 지역의 실시간 데이터를 찾을 수 없습니다.");
         }
         
-        // 00시 기준 데이터와 비교
+        // 00시 기준 데이터와 비교 (전날 데이터)
+        LocalDate yesterday = today.minusDays(1);
         EvSubsidy todayData = subsidyMapper.findByCrawlDateAndSidoAndRegionAndDataType(
-                today, sido, region, "today");
+                yesterday, sido, region, "today");
         
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);

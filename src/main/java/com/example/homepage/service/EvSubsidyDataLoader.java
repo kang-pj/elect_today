@@ -223,13 +223,13 @@ public class EvSubsidyDataLoader {
 
     private boolean saveData(LocalDate crawlDate, EvSubsidyData data) {
         try {
-            // 중복 체크
-            EvSubsidy existing = subsidyMapper.findByCrawlDateAndSidoAndRegionAndCarType(
-                    crawlDate, data.getSido(), data.getRegion(), data.getCarType());
+            // 중복 체크 (today 타입만)
+            EvSubsidy existing = subsidyMapper.findByCrawlDateAndSidoAndRegionAndDataType(
+                    crawlDate, data.getSido(), data.getRegion(), "today");
             
             if (existing != null) {
-                log.debug("이미 존재하는 데이터: {} - {} - {} ({})", 
-                        crawlDate, data.getSido(), data.getRegion(), data.getCarType());
+                log.debug("이미 존재하는 데이터: {} - {} - {} (today)", 
+                        crawlDate, data.getSido(), data.getRegion());
                 return false;
             }
             
