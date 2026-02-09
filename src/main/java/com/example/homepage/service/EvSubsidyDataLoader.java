@@ -149,11 +149,11 @@ public class EvSubsidyDataLoader {
                 }
             }
             
-            log.info("JSON 파일 로딩 완료: {} 개 저장", savedCount);
+            log.info("JSON 데이터 로딩 완료: {} 개 저장", savedCount);
             return savedCount;
             
         } catch (Exception e) {
-            log.error("JSON 파일 로딩 오류: {}", filename, e);
+            log.error("JSON 데이터 로딩 오류", e);
             return 0;
         }
     }
