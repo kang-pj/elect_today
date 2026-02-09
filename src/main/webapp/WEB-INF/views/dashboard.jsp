@@ -477,7 +477,7 @@
                 ⏰ 잠시만 기다려주세요
             </div>
             <div class="modal-body">
-                <p>마지막 갱신 후 <strong id="remainingTime">3분</strong>이 지나지 않았습니다.</p>
+                <p>마지막 갱신 후 <strong id="remainingTime">3분</strong> 지나지 않았습니다.</p>
                 <p>서버 부하를 줄이기 위해 3분 후에 다시 시도해주세요.</p>
                 <p style="margin-top: 15px; font-size: 13px; color: #999;">
                     마지막 갱신: <span id="lastUpdateDisplay"></span>
@@ -498,6 +498,32 @@
 
         const sido = '${sido}';
         const region = '${region}';
+
+        function closeModal() {
+            document.getElementById('waitModal').style.display = 'none';
+        }
+
+        function showWaitModal(remainingMinutes, lastUpdateTime) {
+            const modal = document.getElementById('waitModal');
+            const remainingTimeEl = document.getElementById('remainingTime');
+            const lastUpdateDisplayEl = document.getElementById('lastUpdateDisplay');
+            
+            const minutes = Math.ceil(remainingMinutes);
+            const seconds = Math.ceil((remainingMinutes - Math.floor(remainingMinutes)) * 60);
+            
+            if (minutes > 0) {
+                remainingTimeEl.textContent = minutes + '분';
+            } else {
+                remainingTimeEl.textContent = seconds + '초';
+            }
+            
+            if (lastUpdateTime) {
+                const dt = new Date(lastUpdateTime);
+                lastUpdateDisplayEl.textContent = dt.toLocaleString('ko-KR');
+            }
+            
+            modal.style.display = 'block';
+        }
 
         function closeModal() {
             document.getElementById('waitModal').style.display = 'none';
