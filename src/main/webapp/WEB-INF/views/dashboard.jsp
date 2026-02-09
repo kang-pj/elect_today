@@ -460,8 +460,38 @@
 
         function renderStats() {
             const latest = statsData.latest;
-            const remaining = latest.remaining;
-            const receivedRate = ((latest.totalReceived / latest.totalAnnounced) * 100).toFixed(1);
+            
+            // 현재 카테고리에 따른 값 가져오기
+            let announcedValue, receivedValue, deliveredValue, remainingValue;
+            
+            if (currentCategory === 'total') {
+                announcedValue = latest.totalAnnounced;
+                receivedValue = realtimeData ? realtimeData.totalReceived : latest.totalReceived;
+                deliveredValue = realtimeData ? realtimeData.totalDelivered : latest.totalDelivered;
+                remainingValue = latest.remaining;
+            } else if (currentCategory === 'priority') {
+                announcedValue = latest.priorityAnnounced;
+                receivedValue = latest.priorityReceived;
+                deliveredValue = latest.priorityDelivered;
+                remainingValue = latest.priorityAnnounced - latest.priorityReceived;
+            } else if (currentCategory === 'corporation') {
+                announcedValue = latest.corporationAnnounced;
+                receivedValue = latest.corporationReceived;
+                deliveredValue = latest.corporationDelivered;
+                remainingValue = latest.corporationAnnounced - latest.corporationReceived;
+            } else if (currentCategory === 'taxi') {
+                announcedValue = latest.taxiAnnounced;
+                receivedValue = latest.taxiReceived;
+                deliveredValue = latest.taxiDelivered;
+                remainingValue = latest.taxiAnnounced - latest.taxiReceived;
+            } else if (currentCategory === 'general') {
+                announcedValue = latest.generalAnnounced;
+                receivedValue = latest.generalReceived;
+                deliveredValue = latest.generalDelivered;
+                remainingValue = latest.generalAnnounced - latest.generalReceived;
+            }
+            
+            const receivedRate = announcedValue > 0 ? ((receivedValue / announcedValue) * 100).toFixed(1) : '0.0';
             
             // 실시간 데이터 시간 포맷팅
             let realtimeTimeStr = '';
@@ -473,12 +503,12 @@
                 realtimeTimeStr = h + ':' + m + ':' + s + ' 기준';
             }
             
-            // 오늘 증가량 표시
+            // 오늘 증가량 표시 (전체만)
             let todayReceivedBadge = '';
             let todayDeliveredBadge = '';
             let todayCompareCard = '';
             
-            if (realtimeData && realtimeData.todayReceived !== undefined) {
+            if (currentCategory === 'total' && realtimeData && realtimeData.todayReceived !== undefined) {
                 todayReceivedBadge = '<div class="change up">📈 오늘 +' + realtimeData.todayReceived.toLocaleString() + '대 신청</div>';
                 todayDeliveredBadge = '<div class="change up">🚗 오늘 +' + realtimeData.todayDelivered.toLocaleString() + '대 출고</div>';
                 
@@ -504,16 +534,14 @@
                 todayCompareCard = '<div class="stats-grid-today">' + todayReceivedCard + todayDeliveredCard + '</div>';
             }
             
-            const realtimeClass = realtimeData ? 'realtime' : '';
-            const realtimeBadge = realtimeData ? '<span class="badge">실시간</span>' : '';
-            const realtimeTime = realtimeData ? '<div style="font-size: 11px; color: #4caf50; margin-bottom: 5px;">🕐 ' + realtimeTimeStr + '</div>' : '';
-            const receivedValue = realtimeData ? realtimeData.totalReceived : latest.totalReceived;
-            const deliveredValue = realtimeData ? realtimeData.totalDelivered : latest.totalDelivered;
+            const realtimeClass = (currentCategory === 'total' && realtimeData) ? 'realtime' : '';
+            const realtimeBadge = (currentCategory === 'total' && realtimeData) ? '<span class="badge">실시간</span>' : '';
+            const realtimeTime = (currentCategory === 'total' && realtimeData) ? '<div style="font-size: 11px; color: #4caf50; margin-bottom: 5px;">🕐 ' + realtimeTimeStr + '</div>' : '';
             
             const html = '<div class="stats-grid">' +
                 '<div class="stat-card">' +
                 '<h3>공고 대수</h3>' +
-                '<div class="value">' + latest.totalAnnounced.toLocaleString() + '<span class="unit">대</span></div>' +
+                '<div class="value">' + announcedValue.toLocaleString() + '<span class="unit">대</span></div>' +
                 '<div class="detail">' +
                 '우선 ' + latest.priorityAnnounced.toLocaleString() + ' | ' +
                 '법인 ' + latest.corporationAnnounced.toLocaleString() + ' | ' +
@@ -537,7 +565,7 @@
                 '</div>' +
                 '<div class="stat-card">' +
                 '<h3>잔여 대수</h3>' +
-                '<div class="value">' + remaining.toLocaleString() + '<span class="unit">대</span></div>' +
+                '<div class="value">' + remainingValue.toLocaleString() + '<span class="unit">대</span></div>' +
                 '<div class="detail">접수율: ' + receivedRate + '%</div>' +
                 '</div>' +
                 '</div>' +
@@ -714,16 +742,27 @@
             };
             
             const categoryLabel = categoryLabels[currentCategory];
+            let values;
             
             if (currentDataType === 'remaining') {
+                if (currentCategory === 'total') {
+                    values = statsData.remaining;
+                } else {
+                    values = statsData[currentCategory].remaining;
+                }
                 return {
                     label: '잔여 대수 (' + categoryLabel + ')',
-                    values: statsData.remaining
+                    values: values
                 };
             } else {
+                if (currentCategory === 'total') {
+                    values = statsData.received;
+                } else {
+                    values = statsData[currentCategory].received;
+                }
                 return {
                     label: '접수 대수 (' + categoryLabel + ')',
-                    values: statsData.received
+                    values: values
                 };
             }
         }
@@ -747,6 +786,7 @@
             document.getElementById('btnGeneral').classList.toggle('active', category === 'general');
             
             updateChart();
+            renderStats();  // 통계 카드도 업데이트
         }
 
         function changeRegion() {

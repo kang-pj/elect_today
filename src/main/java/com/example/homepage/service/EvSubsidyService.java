@@ -197,15 +197,99 @@ public class EvSubsidyService {
                 .map(data -> data.getTotalAnnounced() - data.getTotalReceived())
                 .toList();
         
+        // 카테고리별 데이터
+        List<Integer> priorityAnnounced = dataList.stream()
+                .map(EvSubsidy::getPriorityAnnounced)
+                .toList();
+        List<Integer> priorityReceived = dataList.stream()
+                .map(EvSubsidy::getPriorityReceived)
+                .toList();
+        List<Integer> priorityDelivered = dataList.stream()
+                .map(EvSubsidy::getPriorityDelivered)
+                .toList();
+        List<Integer> priorityRemaining = dataList.stream()
+                .map(data -> data.getPriorityAnnounced() - data.getPriorityReceived())
+                .toList();
+        
+        List<Integer> corporationAnnounced = dataList.stream()
+                .map(EvSubsidy::getCorporationAnnounced)
+                .toList();
+        List<Integer> corporationReceived = dataList.stream()
+                .map(EvSubsidy::getCorporationReceived)
+                .toList();
+        List<Integer> corporationDelivered = dataList.stream()
+                .map(EvSubsidy::getCorporationDelivered)
+                .toList();
+        List<Integer> corporationRemaining = dataList.stream()
+                .map(data -> data.getCorporationAnnounced() - data.getCorporationReceived())
+                .toList();
+        
+        List<Integer> taxiAnnounced = dataList.stream()
+                .map(EvSubsidy::getTaxiAnnounced)
+                .toList();
+        List<Integer> taxiReceived = dataList.stream()
+                .map(EvSubsidy::getTaxiReceived)
+                .toList();
+        List<Integer> taxiDelivered = dataList.stream()
+                .map(EvSubsidy::getTaxiDelivered)
+                .toList();
+        List<Integer> taxiRemaining = dataList.stream()
+                .map(data -> data.getTaxiAnnounced() - data.getTaxiReceived())
+                .toList();
+        
+        List<Integer> generalAnnounced = dataList.stream()
+                .map(EvSubsidy::getGeneralAnnounced)
+                .toList();
+        List<Integer> generalReceived = dataList.stream()
+                .map(EvSubsidy::getGeneralReceived)
+                .toList();
+        List<Integer> generalDelivered = dataList.stream()
+                .map(EvSubsidy::getGeneralDelivered)
+                .toList();
+        List<Integer> generalRemaining = dataList.stream()
+                .map(data -> data.getGeneralAnnounced() - data.getGeneralReceived())
+                .toList();
+        
         Map<String, Object> result = new HashMap<>();
         result.put("sido", sido);
         result.put("region", region);
         result.put("carType", latestData.getCarType());
         result.put("dates", dates);
+        
+        // 전체 데이터
         result.put("announced", announced);
         result.put("received", received);
         result.put("delivered", delivered);
         result.put("remaining", remaining);
+        
+        // 카테고리별 데이터
+        Map<String, Object> priority = new HashMap<>();
+        priority.put("announced", priorityAnnounced);
+        priority.put("received", priorityReceived);
+        priority.put("delivered", priorityDelivered);
+        priority.put("remaining", priorityRemaining);
+        result.put("priority", priority);
+        
+        Map<String, Object> corporation = new HashMap<>();
+        corporation.put("announced", corporationAnnounced);
+        corporation.put("received", corporationReceived);
+        corporation.put("delivered", corporationDelivered);
+        corporation.put("remaining", corporationRemaining);
+        result.put("corporation", corporation);
+        
+        Map<String, Object> taxi = new HashMap<>();
+        taxi.put("announced", taxiAnnounced);
+        taxi.put("received", taxiReceived);
+        taxi.put("delivered", taxiDelivered);
+        taxi.put("remaining", taxiRemaining);
+        result.put("taxi", taxi);
+        
+        Map<String, Object> general = new HashMap<>();
+        general.put("announced", generalAnnounced);
+        general.put("received", generalReceived);
+        general.put("delivered", generalDelivered);
+        general.put("remaining", generalRemaining);
+        result.put("general", general);
         
         // 최신 데이터 상세
         Map<String, Object> latest = new HashMap<>();
