@@ -562,8 +562,9 @@
                 console.error('마지막 갱신 시간 확인 오류:', e);
             }
             
+            // 전체 페이지 로딩 오버레이 표시
+            document.getElementById('loadingContainer').style.display = 'flex';
             btn.disabled = true;
-            btn.textContent = '⏳ 전체 지역 갱신 중...';
             
             try {
                 const url = '/api/ev-subsidy/update-realtime?sido=' + encodeURIComponent(sido) + '&region=' + encodeURIComponent(region);
@@ -614,6 +615,9 @@
                 
                 renderStats();
                 
+                // 로딩 오버레이 숨기기
+                document.getElementById('loadingContainer').style.display = 'none';
+                
                 btn.textContent = '✅ ' + data.totalRegions + '개 지역 갱신 완료';
                 setTimeout(() => {
                     btn.textContent = '🔄 실시간 갱신';
@@ -622,6 +626,7 @@
                 
             } catch (error) {
                 console.error('Error refreshing data:', error);
+                document.getElementById('loadingContainer').style.display = 'none';
                 alert('실시간 갱신 중 오류가 발생했습니다: ' + error.message);
                 btn.textContent = '🔄 실시간 갱신';
                 btn.disabled = false;

@@ -68,7 +68,11 @@ public interface EvSubsidyMapper {
             "general_received = #{generalReceived}, " +
             "total_delivered = #{totalDelivered}, priority_delivered = #{priorityDelivered}, " +
             "corporation_delivered = #{corporationDelivered}, taxi_delivered = #{taxiDelivered}, " +
-            "general_delivered = #{generalDelivered} " +
+            "general_delivered = #{generalDelivered}, " +
+            "created_at = NOW() " +
             "WHERE id = #{id}")
     int update(EvSubsidy evSubsidy);
+    
+    @Delete("DELETE FROM ev_subsidy WHERE id = #{id}")
+    int deleteById(Long id);
 }

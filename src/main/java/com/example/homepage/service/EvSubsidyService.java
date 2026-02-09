@@ -179,60 +179,42 @@ public class EvSubsidyService {
         
         for (EvSubsidyData data : crawledData) {
             try {
-                // realtime 타입으로 저장 (있으면 update, 없으면 insert)
+                // realtime 타입 기존 데이터 삭제 후 재삽입 (crawl_date와 created_at을 현재 시간으로)
                 EvSubsidy existing = subsidyMapper.findByCrawlDateAndSidoAndRegionAndDataType(
                         today, data.getSido(), data.getRegion(), "realtime");
                 
                 if (existing != null) {
-                    // 업데이트
-                    existing.setTotalAnnounced(data.getTotalAnnounced());
-                    existing.setPriorityAnnounced(data.getPriorityAnnounced());
-                    existing.setCorporationAnnounced(data.getCorporationAnnounced());
-                    existing.setTaxiAnnounced(data.getTaxiAnnounced());
-                    existing.setGeneralAnnounced(data.getGeneralAnnounced());
-                    
-                    existing.setTotalReceived(data.getTotalReceived());
-                    existing.setPriorityReceived(data.getPriorityReceived());
-                    existing.setCorporationReceived(data.getCorporationReceived());
-                    existing.setTaxiReceived(data.getTaxiReceived());
-                    existing.setGeneralReceived(data.getGeneralReceived());
-                    
-                    existing.setTotalDelivered(data.getTotalDelivered());
-                    existing.setPriorityDelivered(data.getPriorityDelivered());
-                    existing.setCorporationDelivered(data.getCorporationDelivered());
-                    existing.setTaxiDelivered(data.getTaxiDelivered());
-                    existing.setGeneralDelivered(data.getGeneralDelivered());
-                    
-                    subsidyMapper.update(existing);
-                    log.debug("실시간 데이터 업데이트: {} - {}", data.getSido(), data.getRegion());
-                } else {
-                    // 신규 삽입
-                    EvSubsidy entity = EvSubsidy.builder()
-                            .crawlDate(today)
-                            .sido(data.getSido())
-                            .region(data.getRegion())
-                            .carType(data.getCarType())
-                            .dataType("realtime")
-                            .totalAnnounced(data.getTotalAnnounced())
-                            .priorityAnnounced(data.getPriorityAnnounced())
-                            .corporationAnnounced(data.getCorporationAnnounced())
-                            .taxiAnnounced(data.getTaxiAnnounced())
-                            .generalAnnounced(data.getGeneralAnnounced())
-                            .totalReceived(data.getTotalReceived())
-                            .priorityReceived(data.getPriorityReceived())
-                            .corporationReceived(data.getCorporationReceived())
-                            .taxiReceived(data.getTaxiReceived())
-                            .generalReceived(data.getGeneralReceived())
-                            .totalDelivered(data.getTotalDelivered())
-                            .priorityDelivered(data.getPriorityDelivered())
-                            .corporationDelivered(data.getCorporationDelivered())
-                            .taxiDelivered(data.getTaxiDelivered())
-                            .generalDelivered(data.getGeneralDelivered())
-                            .build();
-                    
-                    subsidyMapper.insert(entity);
-                    log.debug("실시간 데이터 신규 삽입: {} - {}", data.getSido(), data.getRegion());
+                    // 기존 데이터 삭제
+                    subsidyMapper.deleteById(existing.getId());
+                    log.debug("실시간 데이터 삭제: {} - {}", data.getSido(), data.getRegion());
                 }
+                
+                // 신규 삽입 (crawl_date = 오늘, created_at = 현재 시간)
+                EvSubsidy entity = EvSubsidy.builder()
+                        .crawlDate(today)
+                        .sido(data.getSido())
+                        .region(data.getRegion())
+                        .carType(data.getCarType())
+                        .dataType("realtime")
+                        .totalAnnounced(data.getTotalAnnounced())
+                        .priorityAnnounced(data.getPriorityAnnounced())
+                        .corporationAnnounced(data.getCorporationAnnounced())
+                        .taxiAnnounced(data.getTaxiAnnounced())
+                        .generalAnnounced(data.getGeneralAnnounced())
+                        .totalReceived(data.getTotalReceived())
+                        .priorityReceived(data.getPriorityReceived())
+                        .corporationReceived(data.getCorporationReceived())
+                        .taxiReceived(data.getTaxiReceived())
+                        .generalReceived(data.getGeneralReceived())
+                        .totalDelivered(data.getTotalDelivered())
+                        .priorityDelivered(data.getPriorityDelivered())
+                        .corporationDelivered(data.getCorporationDelivered())
+                        .taxiDelivered(data.getTaxiDelivered())
+                        .generalDelivered(data.getGeneralDelivered())
+                        .build();
+                
+                subsidyMapper.insert(entity);
+                log.debug("실시간 데이터 신규 삽입: {} - {}", data.getSido(), data.getRegion());
                 
                 savedCount++;
                 
