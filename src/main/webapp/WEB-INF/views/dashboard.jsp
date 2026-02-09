@@ -596,6 +596,8 @@
                     throw new Error(data.error);
                 }
                 
+                console.log('갱신된 데이터:', data);
+                
                 // realtime 데이터 업데이트 (모든 카테고리 포함)
                 realtimeData = {
                     totalReceived: data.totalReceived,
@@ -632,6 +634,8 @@
                     updatedAt: data.updatedAt
                 };
                 
+                console.log('업데이트된 realtimeData:', realtimeData);
+                
                 renderStats();
                 
                 // 로딩 오버레이 숨기기
@@ -655,6 +659,9 @@
         function renderStats() {
             const latest = statsData.latest;
             
+            console.log('renderStats 호출 - realtimeData:', realtimeData);
+            console.log('renderStats 호출 - latest:', latest);
+            
             // 현재 카테고리에 따른 값 가져오기
             let announcedValue, receivedValue, deliveredValue, remainingValue;
             let todayReceivedValue = 0, todayDeliveredValue = 0;
@@ -665,8 +672,8 @@
                 deliveredValue = realtimeData ? realtimeData.totalDelivered : latest.totalDelivered;
                 remainingValue = realtimeData ? realtimeData.totalRemaining : latest.remaining;
                 if (realtimeData) {
-                    todayReceivedValue = realtimeData.todayReceived;
-                    todayDeliveredValue = realtimeData.todayDelivered;
+                    todayReceivedValue = realtimeData.todayReceived || 0;
+                    todayDeliveredValue = realtimeData.todayDelivered || 0;
                 }
             } else if (currentCategory === 'priority') {
                 announcedValue = latest.priorityAnnounced;
@@ -674,8 +681,8 @@
                 deliveredValue = realtimeData ? realtimeData.priorityDelivered : latest.priorityDelivered;
                 remainingValue = realtimeData ? realtimeData.priorityRemaining : (latest.priorityAnnounced - latest.priorityReceived);
                 if (realtimeData) {
-                    todayReceivedValue = realtimeData.todayPriorityReceived;
-                    todayDeliveredValue = realtimeData.todayPriorityDelivered;
+                    todayReceivedValue = realtimeData.todayPriorityReceived || 0;
+                    todayDeliveredValue = realtimeData.todayPriorityDelivered || 0;
                 }
             } else if (currentCategory === 'corporation') {
                 announcedValue = latest.corporationAnnounced;
@@ -683,8 +690,8 @@
                 deliveredValue = realtimeData ? realtimeData.corporationDelivered : latest.corporationDelivered;
                 remainingValue = realtimeData ? realtimeData.corporationRemaining : (latest.corporationAnnounced - latest.corporationReceived);
                 if (realtimeData) {
-                    todayReceivedValue = realtimeData.todayCorporationReceived;
-                    todayDeliveredValue = realtimeData.todayCorporationDelivered;
+                    todayReceivedValue = realtimeData.todayCorporationReceived || 0;
+                    todayDeliveredValue = realtimeData.todayCorporationDelivered || 0;
                 }
             } else if (currentCategory === 'taxi') {
                 announcedValue = latest.taxiAnnounced;
@@ -692,8 +699,8 @@
                 deliveredValue = realtimeData ? realtimeData.taxiDelivered : latest.taxiDelivered;
                 remainingValue = realtimeData ? realtimeData.taxiRemaining : (latest.taxiAnnounced - latest.taxiReceived);
                 if (realtimeData) {
-                    todayReceivedValue = realtimeData.todayTaxiReceived;
-                    todayDeliveredValue = realtimeData.todayTaxiDelivered;
+                    todayReceivedValue = realtimeData.todayTaxiReceived || 0;
+                    todayDeliveredValue = realtimeData.todayTaxiDelivered || 0;
                 }
             } else if (currentCategory === 'general') {
                 announcedValue = latest.generalAnnounced;
@@ -701,10 +708,12 @@
                 deliveredValue = realtimeData ? realtimeData.generalDelivered : latest.generalDelivered;
                 remainingValue = realtimeData ? realtimeData.generalRemaining : (latest.generalAnnounced - latest.generalReceived);
                 if (realtimeData) {
-                    todayReceivedValue = realtimeData.todayGeneralReceived;
-                    todayDeliveredValue = realtimeData.todayGeneralDelivered;
+                    todayReceivedValue = realtimeData.todayGeneralReceived || 0;
+                    todayDeliveredValue = realtimeData.todayGeneralDelivered || 0;
                 }
             }
+            
+            console.log('계산된 값 - todayReceivedValue:', todayReceivedValue, 'todayDeliveredValue:', todayDeliveredValue);
             
             const receivedRate = announcedValue > 0 ? ((receivedValue / announcedValue) * 100).toFixed(1) : '0.0';
             
