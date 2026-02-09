@@ -384,7 +384,7 @@
 
         async function loadData() {
             try {
-                const response = await fetch(`/api/ev-subsidy/region-stats?sido=\${encodeURIComponent(sido)}&region=\${encodeURIComponent(region)}`);
+                const response = await fetch(`/api/ev-subsidy/region-stats?sido=${encodeURIComponent(sido)}&region=${encodeURIComponent(region)}`);
                 const data = await response.json();
                 
                 if (data.error) {
@@ -411,7 +411,7 @@
             btn.textContent = '⏳ 갱신 중...';
             
             try {
-                const response = await fetch(`/api/ev-subsidy/update-realtime?sido=\${encodeURIComponent(sido)}&region=\${encodeURIComponent(region)}`, {
+                const response = await fetch(`/api/ev-subsidy/update-realtime?sido=${encodeURIComponent(sido)}&region=${encodeURIComponent(region)}`, {
                     method: 'POST'
                 });
                 const data = await response.json();
@@ -454,7 +454,7 @@
             let realtimeTimeStr = '';
             if (realtimeData && realtimeData.updatedAt) {
                 const dt = new Date(realtimeData.updatedAt);
-                realtimeTimeStr = `\${dt.getHours().toString().padStart(2, '0')}:\${dt.getMinutes().toString().padStart(2, '0')}:\${dt.getSeconds().toString().padStart(2, '0')} 기준`;
+                realtimeTimeStr = `${dt.getHours().toString().padStart(2, '0')}:${dt.getMinutes().toString().padStart(2, '0')}:${dt.getSeconds().toString().padStart(2, '0')} 기준`;
             }
             
             // 오늘 증가량 표시
@@ -465,12 +465,12 @@
             if (realtimeData && realtimeData.todayReceived !== undefined) {
                 todayReceivedBadge = `
                     <div class="change up">
-                        📈 오늘 +\${realtimeData.todayReceived.toLocaleString()}대 신청
+                        📈 오늘 +${realtimeData.todayReceived.toLocaleString()}대 신청
                     </div>
                 `;
                 todayDeliveredBadge = `
                     <div class="change up">
-                        🚗 오늘 +\${realtimeData.todayDelivered.toLocaleString()}대 출고
+                        🚗 오늘 +${realtimeData.todayDelivered.toLocaleString()}대 출고
                     </div>
                 `;
                 
@@ -487,11 +487,10 @@
                             </button>
                         </div>
                         <div style="font-size: 12px; color: #667eea; margin-bottom: 10px;">
-                            🕐 \${realtimeTimeStr}
+                            🕐 ${realtimeTimeStr}
                         </div>
                         <div class="value" style="font-size: 42px; color: #f44336;">
-                            \${realtimeData.todayReceived.toLocaleString()}<span class="unit">대</span>
-                        </div>
+                            ${realtimeData.todayReceived.toLocaleString()}<span class="unit">대</span></div>
                         <div class="detail" style="margin-top: 10px;">
                             📝 오늘 신청한 대수
                         </div>
@@ -503,10 +502,10 @@
                     <div class="stat-card realtime">
                         <h3>오늘 출고</h3>
                         <div style="font-size: 12px; color: #667eea; margin-bottom: 10px;">
-                            🕐 \${realtimeTimeStr}
+                            🕐 ${realtimeTimeStr}
                         </div>
                         <div class="value" style="font-size: 42px; color: #4caf50;">
-                            \${realtimeData.todayDelivered.toLocaleString()}<span class="unit">대</span>
+                            ${realtimeData.todayDelivered.toLocaleString()}<span class="unit">대</span>
                         </div>
                         <div class="detail" style="margin-top: 10px;">
                             🚗 오늘 출고된 대수
@@ -522,44 +521,44 @@
                 <div class="stats-grid">
                     <div class="stat-card">
                         <h3>공고 대수</h3>
-                        <div class="value">\${latest.totalAnnounced.toLocaleString()}<span class="unit">대</span></div>
+                        <div class="value">${latest.totalAnnounced.toLocaleString()}<span class="unit">대</span></div>
                         <div class="detail">
-                            우선 \${latest.priorityAnnounced.toLocaleString()} | 
-                            법인 \${latest.corporationAnnounced.toLocaleString()} | 
-                            택시 \${latest.taxiAnnounced.toLocaleString()} | 
-                            일반 \${latest.generalAnnounced.toLocaleString()}
+                            우선 ${latest.priorityAnnounced.toLocaleString()} | 
+                            법인 ${latest.corporationAnnounced.toLocaleString()} | 
+                            택시 ${latest.taxiAnnounced.toLocaleString()} | 
+                            일반 ${latest.generalAnnounced.toLocaleString()}
                         </div>
                     </div>
-                    <div class="stat-card \${realtimeData ? 'realtime' : ''}">
+                    <div class="stat-card ${realtimeData ? 'realtime' : ''}">
                         <h3>
                             접수 대수
-                            \${realtimeData ? '<span class="badge">실시간</span>' : ''}
+                            ${realtimeData ? '<span class="badge">실시간</span>' : ''}
                         </h3>
-                        \${realtimeData ? '<div style="font-size: 11px; color: #4caf50; margin-bottom: 5px;">🕐 ' + realtimeTimeStr + '</div>' : ''}
-                        <div class="value">\${(realtimeData ? realtimeData.totalReceived : latest.totalReceived).toLocaleString()}<span class="unit">대</span></div>
+                        ${realtimeData ? '<div style="font-size: 11px; color: #4caf50; margin-bottom: 5px;">🕐 ' + realtimeTimeStr + '</div>' : ''}
+                        <div class="value">${(realtimeData ? realtimeData.totalReceived : latest.totalReceived).toLocaleString()}<span class="unit">대</span></div>
                         <div class="detail">
-                            00시 기준: \${latest.totalReceived.toLocaleString()}대
+                            00시 기준: ${latest.totalReceived.toLocaleString()}대
                         </div>
-                        \${todayReceivedBadge}
+                        ${todayReceivedBadge}
                     </div>
-                    <div class="stat-card \${realtimeData ? 'realtime' : ''}">
+                    <div class="stat-card ${realtimeData ? 'realtime' : ''}">
                         <h3>
                             출고 대수
-                            \${realtimeData ? '<span class="badge">실시간</span>' : ''}
+                            ${realtimeData ? '<span class="badge">실시간</span>' : ''}
                         </h3>
-                        \${realtimeData ? '<div style="font-size: 11px; color: #4caf50; margin-bottom: 5px;">🕐 ' + realtimeTimeStr + '</div>' : ''}
-                        <div class="value">\${(realtimeData ? realtimeData.totalDelivered : latest.totalDelivered).toLocaleString()}<span class="unit">대</span></div>
+                        ${realtimeData ? '<div style="font-size: 11px; color: #4caf50; margin-bottom: 5px;">🕐 ' + realtimeTimeStr + '</div>' : ''}
+                        <div class="value">${(realtimeData ? realtimeData.totalDelivered : latest.totalDelivered).toLocaleString()}<span class="unit">대</span></div>
                         <div class="detail">
-                            00시 기준: \${latest.totalDelivered.toLocaleString()}대
+                            00시 기준: ${latest.totalDelivered.toLocaleString()}대
                         </div>
-                        \${todayDeliveredBadge}
+                        ${todayDeliveredBadge}
                     </div>
                     <div class="stat-card">
                         <h3>잔여 대수</h3>
-                        <div class="value">\${remaining.toLocaleString()}<span class="unit">대</span></div>
-                        <div class="detail">접수율: \${receivedRate}%</div>
+                        <div class="value">${remaining.toLocaleString()}<span class="unit">대</span></div>
+                        <div class="detail">접수율: ${receivedRate}%</div>
                     </div>
-                    \${todayCompareCard}
+                    ${todayCompareCard}
                 </div>
             `;
             
