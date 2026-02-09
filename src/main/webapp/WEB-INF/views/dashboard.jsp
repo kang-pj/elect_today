@@ -294,6 +294,74 @@
             padding: 0 20px;
         }
 
+        /* 토스트 스타일 */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: white;
+            padding: 20px 24px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            display: none;
+            z-index: 10000;
+            min-width: 320px;
+            max-width: 400px;
+            animation: slideInUp 0.3s ease-out;
+            border-left: 4px solid #ff9800;
+        }
+
+        .toast.show {
+            display: block;
+        }
+
+        @keyframes slideInUp {
+            from {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .toast-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .toast-body {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .toast-body strong {
+            color: #ff9800;
+            font-weight: 700;
+        }
+
+        .toast-footer {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #999;
+        }
+
+        @media (max-width: 768px) {
+            .toast {
+                bottom: 20px;
+                right: 20px;
+                left: 20px;
+                min-width: auto;
+            }
+        }
+
         .error {
             background: #fee;
             color: #c33;
@@ -470,22 +538,18 @@
         </div>
     </div>
 
-    <!-- 대기 모달 -->
-    <div id="waitModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                ⏰ 잠시만 기다려주세요
-            </div>
-            <div class="modal-body">
-                <p>마지막 갱신 후 <strong id="remainingTime">3분</strong> 지나지 않았습니다.</p>
-                <p>서버 부하를 줄이기 위해 3분 후에 다시 시도해주세요.</p>
-                <p style="margin-top: 15px; font-size: 13px; color: #999;">
-                    마지막 갱신: <span id="lastUpdateDisplay"></span>
-                </p>
-            </div>
-            <div class="modal-footer">
-                <button class="modal-btn" onclick="closeModal()">확인</button>
-            </div>
+    <!-- 토스트 알림 -->
+    <div id="toast" class="toast">
+        <div class="toast-header">
+            <span>⏰</span>
+            <span>잠시만 기다려주세요</span>
+        </div>
+        <div class="toast-body">
+            <p>마지막 갱신 후 <strong id="toastRemainingTime">3분</strong> 지나지 않았습니다.</p>
+            <p style="margin-top: 8px;">3분 후에 다시 시도해주세요.</p>
+        </div>
+        <div class="toast-footer">
+            마지막 갱신: <span id="toastLastUpdate"></span>
         </div>
     </div>
 
@@ -499,14 +563,10 @@
         const sido = '${sido}';
         const region = '${region}';
 
-        function closeModal() {
-            document.getElementById('waitModal').style.display = 'none';
-        }
-
-        function showWaitModal(remainingMinutes, lastUpdateTime) {
-            const modal = document.getElementById('waitModal');
-            const remainingTimeEl = document.getElementById('remainingTime');
-            const lastUpdateDisplayEl = document.getElementById('lastUpdateDisplay');
+        function showToast(remainingMinutes, lastUpdateTime) {
+            const toast = document.getElementById('toast');
+            const remainingTimeEl = document.getElementById('toastRemainingTime');
+            const lastUpdateEl = document.getElementById('toastLastUpdate');
             
             const minutes = Math.ceil(remainingMinutes);
             const seconds = Math.ceil((remainingMinutes - Math.floor(remainingMinutes)) * 60);
@@ -519,10 +579,15 @@
             
             if (lastUpdateTime) {
                 const dt = new Date(lastUpdateTime);
-                lastUpdateDisplayEl.textContent = dt.toLocaleString('ko-KR');
+                lastUpdateEl.textContent = dt.toLocaleString('ko-KR');
             }
             
-            modal.style.display = 'block';
+            toast.classList.add('show');
+            
+            // 5초 후 자동으로 사라짐
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 5000);
         }
 
         function closeModal() {
@@ -599,7 +664,7 @@
                     
                     if (diffMinutes < 3) {
                         const remainingMinutes = 3 - diffMinutes;
-                        showWaitModal(remainingMinutes, checkData.lastUpdateTime);
+                        showToast(remainingMinutes, checkData.lastUpdateTime);
                         return;
                     }
                 }
