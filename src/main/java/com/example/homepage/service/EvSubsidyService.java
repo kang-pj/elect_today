@@ -161,6 +161,92 @@ public class EvSubsidyService {
     }
 
     /**
+     * 모든 지역 실시간 크롤링 및 저장
+     */
+    @Transactional
+    public int crawlAndSaveRealtimeData() {
+        LocalDate today = LocalDate.now();
+        log.info("실시간 크롤링 시작: {}", today);
+        
+        List<EvSubsidyData> crawledData = crawler.crawlSubsidyData();
+        
+        if (crawledData.isEmpty()) {
+            log.warn("크롤링된 데이터가 없습니다.");
+            return 0;
+        }
+        
+        int savedCount = 0;
+        
+        for (EvSubsidyData data : crawledData) {
+            try {
+                // realtime 타입으로 저장 (있으면 update, 없으면 insert)
+                Optional<EvSubsidy> existingOpt = subsidyRepository.findByCrawlDateAndSidoAndRegionAndDataType(
+                        today, data.getSido(), data.getRegion(), "realtime");
+                
+                EvSubsidy entity;
+                if (existingOpt.isPresent()) {
+                    // 업데이트
+                    entity = existingOpt.get();
+                    entity.setTotalAnnounced(data.getTotalAnnounced());
+                    entity.setPriorityAnnounced(data.getPriorityAnnounced());
+                    entity.setCorporationAnnounced(data.getCorporationAnnounced());
+                    entity.setTaxiAnnounced(data.getTaxiAnnounced());
+                    entity.setGeneralAnnounced(data.getGeneralAnnounced());
+                    
+                    entity.setTotalReceived(data.getTotalReceived());
+                    entity.setPriorityReceived(data.getPriorityReceived());
+                    entity.setCorporationReceived(data.getCorporationReceived());
+                    entity.setTaxiReceived(data.getTaxiReceived());
+                    entity.setGeneralReceived(data.getGeneralReceived());
+                    
+                    entity.setTotalDelivered(data.getTotalDelivered());
+                    entity.setPriorityDelivered(data.getPriorityDelivered());
+                    entity.setCorporationDelivered(data.getCorporationDelivered());
+                    entity.setTaxiDelivered(data.getTaxiDelivered());
+                    entity.setGeneralDelivered(data.getGeneralDelivered());
+                    
+                    log.debug("실시간 데이터 업데이트: {} - {}", data.getSido(), data.getRegion());
+                } else {
+                    // 신규 삽입
+                    entity = EvSubsidy.builder()
+                            .crawlDate(today)
+                            .sido(data.getSido())
+                            .region(data.getRegion())
+                            .carType(data.getCarType())
+                            .dataType("realtime")
+                            .totalAnnounced(data.getTotalAnnounced())
+                            .priorityAnnounced(data.getPriorityAnnounced())
+                            .corporationAnnounced(data.getCorporationAnnounced())
+                            .taxiAnnounced(data.getTaxiAnnounced())
+                            .generalAnnounced(data.getGeneralAnnounced())
+                            .totalReceived(data.getTotalReceived())
+                            .priorityReceived(data.getPriorityReceived())
+                            .corporationReceived(data.getCorporationReceived())
+                            .taxiReceived(data.getTaxiReceived())
+                            .generalReceived(data.getGeneralReceived())
+                            .totalDelivered(data.getTotalDelivered())
+                            .priorityDelivered(data.getPriorityDelivered())
+                            .corporationDelivered(data.getCorporationDelivered())
+                            .taxiDelivered(data.getTaxiDelivered())
+                            .generalDelivered(data.getGeneralDelivered())
+                            .build();
+                    
+                    log.debug("실시간 데이터 신규 삽입: {} - {}", data.getSido(), data.getRegion());
+                }
+                
+                subsidyRepository.save(entity);
+                savedCount++;
+                
+            } catch (Exception e) {
+                log.error("실시간 데이터 저장 오류: {} - {}", data.getSido(), data.getRegion(), e);
+            }
+        }
+        
+        log.info("실시간 크롤링 완료: {} 개 저장", savedCount);
+        return savedCount;
+    }
+
+    /**
      * 특정 지역의 시계열 통계 데이터 조회 (today 타입만)
      */
     @Transactional(readOnly = true)

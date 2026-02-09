@@ -52,6 +52,34 @@ public class EvSubsidyController {
     }
 
     /**
+     * 실시간 크롤링 실행 (모든 지역)
+     */
+    @PostMapping("/crawl-realtime")
+    public ResponseEntity<Map<String, Object>> crawlRealtimeData() {
+        log.info("실시간 크롤링 요청 수신");
+        
+        try {
+            int count = subsidyService.crawlAndSaveRealtimeData();
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "실시간 크롤링 완료");
+            response.put("savedCount", count);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("실시간 크롤링 오류", e);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "실시간 크롤링 실패: " + e.getMessage());
+            
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
      * JSON 파일에서 데이터 로딩
      */
     @PostMapping("/load-json")
