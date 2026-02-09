@@ -63,6 +63,7 @@
         .icon {
             font-size: 60px;
             margin-bottom: 20px;
+            display: none;
         }
 
         .form-group {
@@ -210,13 +211,19 @@
 <body>
     <div class="container">
         <div class="header">
-            <div class="icon">🚗</div>
             <h1>지역 선택</h1>
             <p>전기차 보조금 정보를 확인할 지역을 선택해주세요</p>
         </div>
 
         <div class="info-box">
-            <p>💡 선택한 지역 정보는 브라우저에 저장되어 다음 방문 시에도 유지됩니다.</p>
+            <p>💡 통합누리집을 참고한 사이트입니다. 정확한 정보는 평화누리집에서 확인하세요.</p>
+            <p style="margin-top: 10px;">
+                <a href="https://ev.or.kr/nportal/buySupprt/initSubsidyPaymentCheckAction.do" 
+                   target="_blank" 
+                   style="color: #667eea; font-weight: 600; text-decoration: none; border-bottom: 2px solid #667eea;">
+                    확인하러 가기 →
+                </a>
+            </p>
         </div>
 
         <form id="regionForm">
