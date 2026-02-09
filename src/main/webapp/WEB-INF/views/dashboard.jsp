@@ -21,10 +21,11 @@
         }
 
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: #ffffff;
+            border-bottom: 1px solid #e0e0e0;
+            color: #333;
             padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
 
         .header-content {
@@ -38,6 +39,7 @@
         .header h1 {
             font-size: 24px;
             font-weight: 600;
+            color: #333;
         }
 
         .region-info {
@@ -47,15 +49,17 @@
         }
 
         .region-badge {
-            background: rgba(255,255,255,0.2);
+            background: #f5f5f5;
+            color: #666;
             padding: 8px 16px;
             border-radius: 20px;
             font-size: 14px;
+            border: 1px solid #e0e0e0;
         }
 
         .btn-change-region {
-            background: white;
-            color: #667eea;
+            background: #667eea;
+            color: white;
             border: none;
             padding: 8px 16px;
             border-radius: 20px;
@@ -65,8 +69,9 @@
         }
 
         .btn-change-region:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            background: #5568d3;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
         }
 
         .container {
@@ -480,7 +485,7 @@
 <body>
     <div class="header">
         <div class="header-content">
-            <h1>🚗 전기차 보조금 대시보드</h1>
+            <h1>전기차 보조금 대시보드</h1>
             <div class="region-info">
                 <div class="region-badge" id="regionBadge">
                     <c:if test="${not empty sido && not empty region}">
