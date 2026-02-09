@@ -141,6 +141,13 @@
             margin-bottom: 20px;
         }
 
+        .stats-grid-today {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
         .stat-card {
             background: white;
             padding: 20px;
@@ -297,6 +304,10 @@
             }
 
             .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid-today {
                 grid-template-columns: 1fr;
             }
         }
@@ -490,7 +501,7 @@
                     '<div class="detail" style="margin-top: 10px;">🚗 오늘 출고된 대수</div>' +
                     '</div>';
                 
-                todayCompareCard = todayReceivedCard + todayDeliveredCard;
+                todayCompareCard = '<div class="stats-grid-today">' + todayReceivedCard + todayDeliveredCard + '</div>';
             }
             
             const realtimeClass = realtimeData ? 'realtime' : '';
@@ -529,8 +540,8 @@
                 '<div class="value">' + remaining.toLocaleString() + '<span class="unit">대</span></div>' +
                 '<div class="detail">접수율: ' + receivedRate + '%</div>' +
                 '</div>' +
-                todayCompareCard +
-                '</div>';
+                '</div>' +
+                todayCompareCard;
             
             document.getElementById('statsContainer').innerHTML = html;
         }
